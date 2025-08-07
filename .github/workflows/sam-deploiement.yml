@@ -1,0 +1,67 @@
+name: Deploy application
+run-name: ${{ github.actor }} is deploying project front🚀
+on:
+  push:
+    workflow_dispatch:
+env:
+  GROUP: /opt/serge-mane
+  PROJECT: website-serge-mane
+jobs:
+  create-folder:
+    name: create folder on server
+    runs-on: ubuntu-latest
+    steps:
+      - name: Execute remote SSH commands
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            mkdir -p ${{env.GROUP}}/${{env.PROJECT}}
+  build-projet:
+    runs-on: ubuntu-latest
+    needs: create-folder
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Build project
+        run: |
+          npm install
+          npm run build
+      - name: Copy files on sevrer
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: dist
+          target: ${{env.GROUP}}/${{env.PROJECT}}
+          strip_components: 1
+          overwrite: true
+  run-project:
+    name: run project on serveur
+    runs-on: ubuntu-latest
+    needs: build-projet
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Copy configuration files on sevrer
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: website-serge-mane.conf
+          target: /etc/nginx/conf.d
+          overwrite: true
+      - name: Execute remote SSH commands
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            sudo nginx -t
+            sudo service nginx restart
+            sudo certbot certonly --nginx -d seman.mesnaissances.com --force-renew
