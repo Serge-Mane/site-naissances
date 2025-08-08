@@ -75,7 +75,7 @@ function Login() {
         </form>
       </div>
       <p className="p-4 text-center md:hidden">
-        &copy; {new Date().getFullYear()} chillo.tech
+        &copy; {new Date().getFullYear()} sam.tech
       </p>
     </div>
   );

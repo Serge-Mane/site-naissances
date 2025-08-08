@@ -5,7 +5,7 @@ function Banner() {
       <div>
         <h1 className="p-4 font-bold text-4xl">MES NAISSANCES</h1>
       </div>
-      <p className="p-4">&copy; {new Date().getFullYear()} chillo.tech</p>
+      <p className="p-4">&copy; {new Date().getFullYear()} sam.tech</p>
     </aside>
   );
 }
